@@ -13,13 +13,17 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main extends Application {
     public static void main(String[] args){
         launch(args);
     }
-    //Timer variables
+    //Timer variabler
     private final AtomicInteger totalSeconds = new AtomicInteger(0);
     private int timerSeconds = 0;
     private int timerMinutes = 0;
@@ -50,6 +54,8 @@ public class Main extends Application {
         Label borderPaneBottomLabel = new Label();
         borderPaneBottomLabel.setText("Bekräftelse av sparad medlem visas här: ");
         borderPaneBottomLabel.setFont(Font.font("Arial Rounded MT Bold", 17));
+        borderPaneBottomLabel.setVisible(false);
+
         Label savedMember = new Label();
         VBox borderPaneBottom = new VBox();
         borderPaneBottom.getChildren().addAll(borderPaneBottomLabel, savedMember);
@@ -71,22 +77,38 @@ public class Main extends Application {
         TextField adress = new TextField();
         adress.setPromptText("Ange adress: ");
 
+        Label insufficientInfo = new Label();
+        insufficientInfo.setText("(Du måste fylla i alla fält för att spara!)");
+        insufficientInfo.setFont(Font.font(16));
+        insufficientInfo.setVisible(false);
+
+
         Button saveButton = new Button();
         saveButton.setText("Spara Medlem");
         saveButton.setOnAction(e ->{
-            savedMember.setText(printSavedMember(firstName,lastName,phoneNumber,adress));
-            firstName.clear();
-            lastName.clear();
-            phoneNumber.clear();
-            adress.clear();
+            boolean correctInput = enoughMemberInfoOrNot(firstName,lastName,phoneNumber,adress);
+            if(!correctInput){
+                insufficientInfo.setVisible(true);
+            }
+            else{
+                borderPaneBottomLabel.setVisible(true);
+                insufficientInfo.setVisible(false);
+                saveMember(firstName,lastName,phoneNumber,adress);
+                savedMember.setText(printSavedMember(firstName,lastName,phoneNumber,adress));
+                firstName.clear();
+                lastName.clear();
+                phoneNumber.clear();
+                adress.clear();
+            }
         } );
 
 
         VBox borderPaneLeft = new VBox();
         borderPaneLeft.setSpacing(15);
-        borderPaneLeft.getChildren().addAll(borderPaneLeftLabel, firstName, lastName, phoneNumber, adress, saveButton);
+        borderPaneLeft.getChildren().addAll(borderPaneLeftLabel, firstName, lastName, phoneNumber,
+                adress, saveButton, insufficientInfo);
 
-        //Höger av layouten (BorderPane left)
+        //Höger av layouten (BorderPane right)
         Label stopwatchName = new Label();
         stopwatchName.setText("Tidtagarur: ");
         stopwatchName.setFont(Font.font("Arial Rounded MT Bold", 18));
@@ -154,10 +176,32 @@ public class Main extends Application {
 
     }
 
+    public boolean enoughMemberInfoOrNot(TextField firstName, TextField lastName, TextField phoneNumber, TextField adress){
+        if(firstName.getText().isEmpty() || lastName.getText().isEmpty() || phoneNumber.getText().isEmpty()
+        || adress.getText().isEmpty()){
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+
     public String printSavedMember(TextField firstName, TextField lastName, TextField phoneNumber, TextField adress){
         return "Sparad: " + firstName.getText() + " " + lastName.getText() + ", " + phoneNumber.getText()
         + ", " + adress.getText();
     }
+    public void saveMember(TextField firstName, TextField lastName, TextField phoneNumber, TextField adress) {
+        String file = "savedMembers.txt";
+        try(BufferedWriter toFile = new BufferedWriter(new FileWriter(file,true));){
+            toFile.write("Namn: " + firstName.getText() + " " + lastName.getText() + "\n");
+            toFile.write("Telefonnummer: " + phoneNumber.getText() + "\n");
+            toFile.write("Adress: " + adress.getText() + "\n");
+            toFile.write("\n");
+        }catch(IOException e){
+            System.out.println("Fel vid sparandet till fil: " + e.getMessage());
+        }
+    }
+
     public void startStopwatch(){
         totalSeconds.incrementAndGet();
         timerSeconds = totalSeconds.get() % 60;
