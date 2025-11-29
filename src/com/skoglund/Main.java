@@ -13,16 +13,16 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main extends Application {
-    public static void main(String[] args){
+    public static void main(String[] args) {
         launch(args);
     }
+
     //Timer variabler
     private final AtomicInteger totalSeconds = new AtomicInteger(0);
     private int timerSeconds = 0;
@@ -36,19 +36,19 @@ public class Main extends Application {
     private Button reset;
 
     //Label som flera metoder behöver tillgång til
-    private Label time;
+    private Label stopwatchTime;
 
     @Override
     public void start(Stage stage) throws Exception {
         stage.setTitle("My first JavaFX Application");
 
         //Toppen av layouten (BorderPane top)
-        Label borderPaneTopLabel = new Label();
-        borderPaneTopLabel.setText("Medlemsformulär med tidtagarur");
-        borderPaneTopLabel.setFont(Font.font("Arial Rounded MT Bold", 25));
+        Label applicationTitel = new Label();
+        applicationTitel.setText("Medlemsformulär med tidtagarur");
+        applicationTitel.setFont(Font.font("Arial Rounded MT Bold", 25));
         HBox borderPaneTop = new HBox();
         borderPaneTop.setAlignment(Pos.CENTER);
-        borderPaneTop.getChildren().add(borderPaneTopLabel);
+        borderPaneTop.getChildren().add(applicationTitel);
 
         //Botten av layouten (BorderPaneBottom)
         Label borderPaneBottomLabel = new Label();
@@ -56,14 +56,14 @@ public class Main extends Application {
         borderPaneBottomLabel.setFont(Font.font("Arial Rounded MT Bold", 17));
         borderPaneBottomLabel.setVisible(false);
 
-        Label savedMember = new Label();
-        VBox borderPaneBottom = new VBox();
-        borderPaneBottom.getChildren().addAll(borderPaneBottomLabel, savedMember);
+        Label savedMemberInfo = new Label();
+        VBox saveMember = new VBox();
+        saveMember.getChildren().addAll(borderPaneBottomLabel, savedMemberInfo);
 
         //Vänster av layouten (BorderPane left)
-        Label borderPaneLeftLabel = new Label();
-        borderPaneLeftLabel.setText("Registrera medlem:");
-        borderPaneLeftLabel.setFont(Font.font("Arial Rounded MT Bold", 18));
+        Label registerMemberLabel = new Label();
+        registerMemberLabel.setText("Registrera medlem:");
+        registerMemberLabel.setFont(Font.font("Arial Rounded MT Bold", 18));
 
         TextField firstName = new TextField();
         firstName.setPromptText("Ange förnamn: ");
@@ -85,58 +85,59 @@ public class Main extends Application {
 
         Button saveButton = new Button();
         saveButton.setText("Spara Medlem");
-        saveButton.setOnAction(e ->{
-            boolean correctInput = enoughMemberInfoOrNot(firstName,lastName,phoneNumber,adress);
-            if(!correctInput){
+        saveButton.setOnAction(e -> {
+            boolean correctInput = enoughMemberInfoOrNot(firstName, lastName, phoneNumber, adress);
+            if (!correctInput) {
                 insufficientInfo.setVisible(true);
-            }
-            else{
+            } else {
                 borderPaneBottomLabel.setVisible(true);
                 insufficientInfo.setVisible(false);
-                saveMember(firstName,lastName,phoneNumber,adress);
-                savedMember.setText(printSavedMember(firstName,lastName,phoneNumber,adress));
+                saveMember(firstName, lastName, phoneNumber, adress);
+                savedMemberInfo.setText(printSavedMember(firstName, lastName, phoneNumber, adress));
                 firstName.clear();
                 lastName.clear();
                 phoneNumber.clear();
                 adress.clear();
             }
-        } );
+        });
 
 
-        VBox borderPaneLeft = new VBox();
-        borderPaneLeft.setSpacing(15);
-        borderPaneLeft.getChildren().addAll(borderPaneLeftLabel, firstName, lastName, phoneNumber,
+        VBox registerMember = new VBox();
+        registerMember.setSpacing(15);
+        registerMember.getChildren().addAll(registerMemberLabel, firstName, lastName, phoneNumber,
                 adress, saveButton, insufficientInfo);
 
         //Höger av layouten (BorderPane right)
         Label stopwatchName = new Label();
         stopwatchName.setText("Tidtagarur: ");
         stopwatchName.setFont(Font.font("Arial Rounded MT Bold", 18));
-        time = new Label();
-        time.setFont(Font.font(25));
-        time.setText("00:00:00");
+        stopwatchTime = new Label();
+        stopwatchTime.setFont(Font.font(25));
+        stopwatchTime.setText("00:00:00");
 
 
         start = new Button();
         start.setText("Starta");
-            start.setOnAction(e -> {
-                activateStopwatch();
-                    Thread worker = new Thread(() -> {
-                        while (timerRunning) {
-                            startStopwatch();
-                            Platform.runLater(() -> {
-                                time.setText(String.format("%02d:%02d:%02d", timerHours, timerMinutes, timerSeconds));
-                            });
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException ex) {
-                            }
-                        }
+        start.setOnAction(e -> {
+            activateStopwatch();
+            Thread worker = new Thread(() -> {
+                while (timerRunning) {
+                    startStopwatch();
+                    Platform.runLater(() -> {
+                        stopwatchTime.setText(String.format("%02d:%02d:%02d", timerHours, timerMinutes,
+                                timerSeconds));
                     });
-                    worker.setDaemon(true);
-                    worker.start();
-
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        System.out.println("Tråd avbruten");
+                    }
+                }
             });
+            worker.setDaemon(true);
+            worker.start();
+
+        });
 
         stop = new Button();
         stop.setText("Stoppa");
@@ -154,76 +155,76 @@ public class Main extends Application {
 
         HBox buttons = new HBox();
         buttons.setSpacing(10);
-        buttons.getChildren().addAll(start,stop,reset);
+        buttons.getChildren().addAll(start, stop, reset);
 
-        VBox borderPaneRight = new VBox();
-        borderPaneRight.setSpacing(20);
-        borderPaneRight.getChildren().addAll(stopwatchName, time, buttons);
+        VBox stopwatch = new VBox();
+        stopwatch.setSpacing(20);
+        stopwatch.getChildren().addAll(stopwatchName, stopwatchTime, buttons);
 
         //Root layouten (övergripande layouten för scenen(yttersta skalet)
         BorderPane rootLayout = new BorderPane();
         rootLayout.setTop(borderPaneTop);
-        rootLayout.setBottom(borderPaneBottom);
-        rootLayout.setLeft(borderPaneLeft);
-        rootLayout.setRight(borderPaneRight);
+        rootLayout.setBottom(saveMember);
+        rootLayout.setLeft(registerMember);
+        rootLayout.setRight(stopwatch);
 
         //Scenen
         Scene scene = new Scene(rootLayout, 800, 800);
+
         stage.setScene(scene);
         rootLayout.requestFocus();
         stage.show();
-
-
     }
 
-    public boolean enoughMemberInfoOrNot(TextField firstName, TextField lastName, TextField phoneNumber, TextField adress){
-        if(firstName.getText().isEmpty() || lastName.getText().isEmpty() || phoneNumber.getText().isEmpty()
-        || adress.getText().isEmpty()){
+    public boolean enoughMemberInfoOrNot(TextField firstName, TextField lastName, TextField phoneNumber, TextField adress) {
+        if (firstName.getText().isEmpty() || lastName.getText().isEmpty() || phoneNumber.getText().isEmpty()
+                || adress.getText().isEmpty()) {
             return false;
-        }
-        else{
+        } else {
             return true;
         }
     }
 
-    public String printSavedMember(TextField firstName, TextField lastName, TextField phoneNumber, TextField adress){
+    public String printSavedMember(TextField firstName, TextField lastName, TextField phoneNumber, TextField adress) {
         return "Sparad: " + firstName.getText() + " " + lastName.getText() + ", " + phoneNumber.getText()
-        + ", " + adress.getText();
+                + ", " + adress.getText();
     }
+
     public void saveMember(TextField firstName, TextField lastName, TextField phoneNumber, TextField adress) {
         String file = "savedMembers.txt";
-        try(BufferedWriter toFile = new BufferedWriter(new FileWriter(file,true));){
+        try (BufferedWriter toFile = new BufferedWriter(new FileWriter(file, true));) {
             toFile.write("Namn: " + firstName.getText() + " " + lastName.getText() + "\n");
             toFile.write("Telefonnummer: " + phoneNumber.getText() + "\n");
             toFile.write("Adress: " + adress.getText() + "\n");
             toFile.write("\n");
-        }catch(IOException e){
+        } catch (IOException e) {
             System.out.println("Fel vid sparandet till fil: " + e.getMessage());
         }
     }
 
-    public void startStopwatch(){
+    public void startStopwatch() {
         totalSeconds.incrementAndGet();
         timerSeconds = totalSeconds.get() % 60;
         timerMinutes = (totalSeconds.get() / 60) % 60;
         timerHours = totalSeconds.get() / 3600;
     }
-    public void stopStopwatch(){
+
+    public void stopStopwatch() {
         stop.setDisable(true);
         timerRunning = false;
         start.setDisable(false);
         reset.setDisable(false);
     }
 
-    public void resetStopwatch(){
+    public void resetStopwatch() {
         stop.setDisable(true);
         reset.setDisable(true);
         totalSeconds.set(0);
-        time.setText("00:00:00");
+        stopwatchTime.setText("00:00:00");
         start.requestFocus();
     }
 
-    public void activateStopwatch(){
+    public void activateStopwatch() {
         timerRunning = true;
         start.setDisable(true);
         stop.setDisable(false);
